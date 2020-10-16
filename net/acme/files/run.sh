@@ -210,11 +210,14 @@ issue_cert()
 	local user_cleanup
 	local ret
 	local domain_dir
+	local use_custom_acme_directory
+	local custom_acme_directory_url
 
 	config_get_bool enabled "$section" enabled 0
 	config_get_bool use_staging "$section" use_staging
 	config_get_bool update_uhttpd "$section" update_uhttpd
 	config_get_bool update_nginx "$section" update_nginx
+	config_get_bool use_custom_acme_directory "$section" use_custom_acme_directory
 	config_get calias "$section" calias
 	config_get dalias "$section" dalias
 	config_get domains "$section" domains
@@ -223,6 +226,8 @@ issue_cert()
 	config_get dns "$section" dns
 	config_get user_setup "$section" user_setup
 	config_get user_cleanup "$section" user_cleanup
+	config_get custom_acme_directory_url "$section" custom_acme_directory_url
+	
 
 	UPDATE_NGINX=$update_nginx
 	UPDATE_UHTTPD=$update_uhttpd
@@ -276,6 +281,11 @@ issue_cert()
 	acme_args="$acme_args --keylength $keylength"
 	[ -n "$ACCOUNT_EMAIL" ] && acme_args="$acme_args --accountemail $ACCOUNT_EMAIL"
 	[ "$use_staging" -eq "1" ] && acme_args="$acme_args --staging"
+
+	if [ "$use_custom_acme_directory" -eq "1" ] && [ -n $custom_acme_directory_url ]; then
+		log "Using custom ACME directory URL"
+		acme_args="$acme_args --server $custom_acme_directory_url"
+	fi
 
 	if [ -n "$dns" ]; then
 		log "Using dns mode"
